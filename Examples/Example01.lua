@@ -1,0 +1,5 @@
+print(Logger)
+print(Logger.Info)
+print(Logger:Get())
+Logger:Get():Info("11")
+Logger:Get():Info("22")
