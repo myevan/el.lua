@@ -7,19 +7,23 @@
         return EL::LuaState(state).InvokeCFunction(func); })
 
 #define EL_LUA_CLASS(cls) \
-    EL::LuaGlobalState::Get().BeginLuaClass(#cls, [](lua_State* state) {\
-        return EL::LuaState(state).CreateCppInstance<cls>(); })
+    EL::LuaGlobalState::Get().BeginLuaClass( \
+        #cls, \
+        [](lua_State* state) { \
+            return EL::LuaState(state).CreateCppInstance<cls>(); }, \
+        [](lua_State* state) { \
+            return EL::LuaState(state).DestroyCppInstance<cls>(); }) 
 
 #define EL_LUA_CLASS_INTERFACE(cls) \
     EL::LuaGlobalState::Get().BeginLuaClassInterface(#cls)
 
 #define EL_LUA_CLASS_FUNCTION(cls, method) \
     EL::LuaGlobalState::Get().BindLuaClassMethod(#method, [](lua_State* state) { \
-        return EL::LuaState(state).InvokeCFunction(&cls::method); })
+        return EL::LuaState(state).InvokeCppStaticMethod(&cls::method); })
 
 #define EL_LUA_CLASS_METHOD(cls, method) \
     EL::LuaGlobalState::Get().BindLuaClassMethod(#method, [](lua_State* state) { \
-        return EL::LuaState(state).InvokeCppMethod(&cls::method); })
+        return EL::LuaState(state).InvokeCppBoundMethod(&cls::method); })
 
 #define EL_LUA_CLASS_END(cls) EL::LuaGlobalState::Get().EndLuaClass(#cls)
 

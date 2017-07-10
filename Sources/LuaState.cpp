@@ -22,10 +22,9 @@ namespace EL
         lua_setglobal(_state, name);
     }
 
-    void LuaState::BeginLuaClass(const char* name, FunctionType func)
+    void LuaState::BeginLuaClass(const char* name, FunctionType create, FunctionType destroy)
     {
         // local _0 = { __name="name" }
-        puts(name);
         luaL_newmetatable(_state, name);
         
         // setmetatable(_0, _0)
@@ -37,12 +36,15 @@ namespace EL
         lua_pushvalue(_state, -2);
         lua_rawset(_state, -3); 
 
-        // _0.New = function(cls)
+        // _0.__call = function(cls)
         lua_pushliteral(_state, "__call");
-        lua_pushcfunction(_state, func);
+        lua_pushcfunction(_state, create);
         lua_rawset(_state, -3);
 
-        // TODO: __gc
+        // _0.__gc = function(cls)
+        lua_pushliteral(_state, "__gc");
+        lua_pushcfunction(_state, destroy);
+        lua_rawset(_state, -3);
     }
 
     void LuaState::BeginLuaClassInterface(const char* name)

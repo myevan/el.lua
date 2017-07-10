@@ -36,7 +36,7 @@ namespace EL
         void BindLuaFunction(const char* name, FunctionType func);
 
     public:
-        void BeginLuaClass(const char* name, FunctionType func);
+        void BeginLuaClass(const char* name, FunctionType create, FunctionType destroy);
         void BeginLuaClassInterface(const char* name);
         void BindLuaClassMethod(const char* name, FunctionType func);
         void EndLuaClass(const char* name);
@@ -65,15 +65,29 @@ namespace EL
         template<typename ClsType>
         int CreateCppInstance() 
         {
-            // _1 = {userdata}
+            // _0 = {userdata}
             ClsType** userData = static_cast<ClsType**>(lua_newuserdata(_state, sizeof(ClsType*)));
             *userData = new ClsType();
 
-            // setmetatable(_1, cls)
+            // setmetatable(_0, cls)
             lua_pushvalue(_state, 1);
             lua_setmetatable(_state, -2);
 
             return 1; 
+        }
+
+        template<typename ClsType>
+        int DestroyCppInstance() 
+        {
+            ClsType** instRef = static_cast<ClsType**>(lua_touserdata(_state, 1));
+            if (instRef == nullptr)
+            {
+                // TODO: error
+                return 0;
+            }
+
+            delete *instRef;
+            return 0; 
         }
 
     public:
@@ -108,8 +122,25 @@ namespace EL
         }
 
     public:
+        template<typename RetType, typename ... ArgTypes>
+        int InvokeCppStaticMethod(RetType (*method)(ArgTypes...)) 
+        {
+            int index = 2;
+            Push((*method)(Check<ArgTypes>(&index)...));
+            return 1;
+        }
+
+        template<typename ... ArgTypes>
+        int InvokeCppStaticMethod(void (*method)(ArgTypes...)) 
+        {
+            int index = 2;
+            (*method)(Check<ArgTypes>(&index)...);
+            return 0;
+        }
+
+    public:
         template<typename ClsType, typename RetType, typename ... ArgTypes>
-        int InvokeCppMethod(RetType (ClsType::*method)(ArgTypes...)) 
+        int InvokeCppBoundMethod(RetType (ClsType::*method)(ArgTypes...)) 
         {
             ClsType** instRef = static_cast<ClsType**>(lua_touserdata(_state, 1));
             if (instRef == nullptr)
@@ -124,7 +155,7 @@ namespace EL
         }
 
         template<typename ClsType, typename ... ArgTypes>
-        int InvokeCppMethod(void (ClsType::*method)(ArgTypes...)) 
+        int InvokeCppBoundMethod(void (ClsType::*method)(ArgTypes...)) 
         {
             ClsType** instRef = static_cast<ClsType**>(lua_touserdata(_state, 1));
             if (instRef == nullptr)
@@ -193,8 +224,14 @@ namespace EL
         template<typename RetType, typename=void>
         struct CheckWrapper
         {
-            static void Invoke(lua_State* state, int index)
+            static RetType Invoke(lua_State* state, int index)
             {
+                RetType* instRef = static_cast<RetType*>(lua_touserdata(state, index));
+                if (instRef == nullptr)
+                {
+                    return nullptr;
+                }
+                return *instRef;
             }
         };
 
@@ -204,6 +241,18 @@ namespace EL
             static int Invoke(lua_State* state, int index)
             {
                 return luaL_checknumber(state, index);
+            }
+        };
+
+        template<typename Dummy>
+        struct CheckWrapper<bool, Dummy>
+        {
+            static bool Invoke(lua_State* state, int index)
+            {
+                if (!lua_isboolean(state, index))
+                    return false;
+
+                return lua_toboolean(state, 1);
             }
         };
 
