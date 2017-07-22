@@ -1,4 +1,5 @@
-require("Foundation")
+require("Foundation/Declare")
+require("Foundation/Event")
 
 print(Logger)
 print(Logger.Info)
