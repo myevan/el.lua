@@ -106,6 +106,12 @@ namespace EL
         return 1;
     }
 
+    int LuaState::Push(const char* input)
+    {
+        lua_pushstring(_state, input);
+        return 1;
+    }
+
     int LuaState::Push(const char** inputs)
     {
         lua_pushlightuserdata(_state, inputs);

@@ -38,5 +38,8 @@ int main()
         EL_LUA_ERROR_PRINT();
         return -1;
     }
+
+    EL_LUA_FUNCTION_CALL("Event:Call", "OnTick", "tick");
+    EL_LUA_FUNCTION_CALL("Test", "test");
     return 0;
 }

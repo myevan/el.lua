@@ -32,3 +32,5 @@
 #define EL_LUA_FILE_EXEC(...) EL::LuaGlobalState::Get().ExecLuaFile(__VA_ARGS__)
 
 #define EL_LUA_ERROR_PRINT(...) EL::LuaGlobalState::Get().PrintError(__VA_ARGS__)
+
+#define EL_LUA_FUNCTION_CALL(...) EL::LuaGlobalState::Get().CallLuaFunction(__VA_ARGS__)

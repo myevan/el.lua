@@ -53,6 +53,7 @@ namespace EL
     private:
         int Push(int(*input)(lua_State*));
         int Push(int input);
+        int Push(const char* input);
         int Push(const char** inputs);
 
     public:
@@ -92,10 +93,31 @@ namespace EL
 
     public:
         template<typename ... ArgTypes>
-        void CallLuaFunction(FunctionType func, ArgTypes ... args)
+        void CallLuaFunction(const char* funcName, ArgTypes ... args)
         {
-            Push(func);
-            int argCount = Push(args...);
+            int argCount = 0;
+
+            const char* memberName = strchr(funcName, ':');
+            if (memberName == nullptr)
+            {
+                lua_getglobal(_state, funcName);
+            }
+            else
+            {
+                lua_rawgeti(_state, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
+                lua_pushlstring(_state, funcName, memberName - funcName);
+                lua_rawget(_state, -2);
+
+                lua_pushvalue(_state, -1);
+                lua_pushstring(_state, memberName + 1);
+                lua_gettable(_state, -2);
+
+                lua_pushvalue(_state, -3);
+                argCount++;
+            }
+
+
+            argCount += Push(args...);
             int retCount = 0;
             if (lua_pcall(_state, argCount, retCount, 0) != LUA_OK) 
             {
