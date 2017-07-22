@@ -1,5 +1,7 @@
 set(FRAMEWORK_SOURCES
     Logger.cpp
+    Buffer.cpp
+    Event.cpp
     LuaState.cpp
     LuaGlobalState.cpp
     Framework.cpp)
