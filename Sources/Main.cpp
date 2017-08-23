@@ -3,7 +3,6 @@
 
 #include "Character.h"
 #include "World.h"
-#include "Event.h"
 
 void OnTick(int index)
 {
@@ -13,13 +12,6 @@ void OnTick(int index)
 int main()
 {
     using namespace EL;
-
-    Event event;
-    event.Add(OnTick);
-    event.Run(1);
-
-    return 0;
-
 
     ConsoleLogger logger;
     Logger::Set(&logger);
