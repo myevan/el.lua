@@ -1,5 +1,3 @@
-#pragma once
-
 #include <vector>
 #include <memory>
 #include <functional>
@@ -62,59 +60,59 @@ namespace EL
     };
 
     template<typename ... ArgTypes>
-        class Delegate
-        {
-            public:
-                using Func = std::function<void(ArgTypes...)>;
+    class Delegate
+    {
+        public:
+            using Func = std::function<void(ArgTypes...)>;
 
-            public:
-                uint32_t Add(Func func)
+        public:
+            uint32_t Add(Func func)
+            {
+                uint32_t handle = m_handleManager.AllocHandle();
+                uint32_t index = m_handleManager.GetHandleIndex(handle);
+                if (index < m_funcs.size())
                 {
-                    uint32_t handle = m_handleManager.AllocHandle();
-                    uint32_t index = m_handleManager.GetHandleIndex(handle);
-                    if (index < m_funcs.size())
-                    {
-                        m_funcs[index] = func;
-                    }
-                    else
-                    {
-                        m_funcs.push_back(func);
-                    }
-
-                    return handle;
+                    m_funcs[index] = func;
+                }
+                else
+                {
+                    m_funcs.push_back(func);
                 }
 
-                void Remove(uint32_t handle)
+                return handle;
+            }
+
+            void Remove(uint32_t handle)
+            {
+                uint32_t index;
+                if (m_handleManager.TryFreeHandle(handle, index))
                 {
-                    uint32_t index;
-                    if (m_handleManager.TryFreeHandle(handle, index))
+                    assert(index < m_funcs.size());
+                    m_funcs[index] = nullptr;
+                }
+            }
+
+            virtual void Run(ArgTypes... args)
+            {
+                for (const Func& func: m_funcs)
+                {
+                    if (func != nullptr)
                     {
-                        assert(index < m_funcs.size());
-                        m_funcs[index] = nullptr;
+                        func(args...);
                     }
                 }
+            }
 
-                virtual void Run(ArgTypes... args)
-                {
-                    for (const Func& func: m_funcs)
-                    {
-                        if (func != nullptr)
-                        {
-                            func(args...);
-                        }
-                    }
-                }
+        public:
+            void operator()(ArgTypes... args)
+            {
+                Run(args...);
+            }
 
-            public:
-                void operator()(ArgTypes... args)
-                {
-                    Run(args...);
-                }
+        private:
+            HandleManager m_handleManager;
 
-            private:
-                HandleManager m_handleManager;
+            std::vector<Func> m_funcs;
 
-                std::vector<Func> m_funcs;
-
-        };
+    };
 }
