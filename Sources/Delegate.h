@@ -38,7 +38,7 @@ namespace EL
 
         void operator-=(Func func)
         {
-            Add(func);
+            Remove(func);
         }
 
         void operator()(ArgTypes... args)
